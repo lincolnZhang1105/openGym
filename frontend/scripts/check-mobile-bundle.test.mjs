@@ -27,7 +27,10 @@ const copy = (prefix, html, { sw = 'const CACHE = "og-1a2b3c"' } = {}) => ({
 })
 const check = files => {
   const dir = tree(files)
-  try { return checkMobileBundle(dir).map(p => p.replace(dir + '/', '')) }
+  try {
+    const prefix = dir.replaceAll('\\', '/') + '/'
+    return checkMobileBundle(dir).map(p => p.replaceAll('\\', '/').replace(prefix, ''))
+  }
   finally { rmSync(dir, { recursive: true, force: true }) }
 }
 
