@@ -68,21 +68,22 @@ export async function attemptOnce({ adapter, cfg, kind, payload, model, timeoutM
   const equipment = payload.coachProfile?.equipment || [];
   const offered = new Set((payload.library || []).map(e => e && e.id));
   const noDumbbells = payload.noDumbbells === true;
+  const equipmentRules = payload.equipmentRules;
   // A revision answered as a review-style change list (#471) is laid onto the plan it revises
   // when every change can be placed exactly, and then judged as the plan it now is.
   const answer = kind === 'create' && isChangeList(parsed.value)
     ? changesOntoPlan(payload.refine?.previous, parsed.value) || parsed.value
     : parsed.value;
   const checked = kind === 'review'
-    ? validateReview(parsed.value, payload.plan, { customIds, equipment, offered, noDumbbells })
+    ? validateReview(parsed.value, payload.plan, { customIds, equipment, offered, noDumbbells, equipmentRules })
     : kind === 'debrief'
       ? validateDebrief(parsed.value)
       : kind === 'ask'
       ? validateAsk(parsed.value)
       : kind === 'adapt'
-      ? validateAdapt(parsed.value, payload.today, { customIds, equipment, offered, noDumbbells })
+      ? validateAdapt(parsed.value, payload.today, { customIds, equipment, offered, noDumbbells, equipmentRules })
       : validatePlan(answer, {
-      customIds, equipment, offered, noDumbbells,
+      customIds, equipment, offered, noDumbbells, equipmentRules,
       workingWeights: payload.history?.workingWeights,
       daysPerWeek: payload.coachProfile?.daysPerWeek
     });

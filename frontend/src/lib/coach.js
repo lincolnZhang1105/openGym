@@ -21,6 +21,7 @@ import { POLICIES, POLICY_NAME, POLICY_DESC } from './progression.js'
 import { newProgramme, programmeById, saveProgramme, normalizeProgramme } from './programmes.js'
 import { ownRowsOf, cleanOwnRow, ownRowsLine } from './warmup-ramp.js'
 import { t, tn } from './i18n.js'
+import { assertOemExercises, changeExerciseIds, oemCanAdd } from '../oem/coach-equipment.js'
 import { snapshotKey } from './sync-merge.js'
 import { scheduleModeOf, startNewPass } from './rotation.js'
 import { queueOf } from './queue.js'
@@ -201,6 +202,7 @@ export function markStale(proposal, S) {
       // changed it — applying would silently overwrite their edit with a stale premise.
       if (cur !== undefined && c.before != null && cur !== c.before && cur !== null) stale = true
     }
+    if (changeExerciseIds(c).some(id => !oemCanAdd(S, id))) stale = true
     return { ...c, status: stale ? 'stale' : (c.status === 'stale' ? 'proposed' : c.status || 'proposed') }
   })
   return { ...proposal, planMoved, changes }
@@ -427,6 +429,7 @@ export function profileLines(p) {
  */
 export function applyCreatedPlan(s, proposal, { schedule } = {}) {
   validateProposal(proposal)
+  assertOemExercises(s, proposal.bundle.routines.flatMap(r => r.ex.map(e => e.id)))
   pushSnapshot(s, proposal.id, t('Before the Coach’s plan'))
   const bundle = proposal.bundle
   // The Coach's `why` texts are for the review screen; they have no place in the routine data.
@@ -640,6 +643,7 @@ export function applyChangeSet(s, proposal, acceptedIds) {
   const accepted = new Set(acceptedIds || [])
   const changes = (proposal.changes || []).filter(c => accepted.has(c.id) && c.status !== 'stale')
   if (!changes.length) return { applied: 0 }
+  assertOemExercises(s, changes.flatMap(changeExerciseIds))
 
   pushSnapshot(s, proposal.id, t('Before the Coach’s changes'))
   const applied = []

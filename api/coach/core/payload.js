@@ -12,6 +12,7 @@
  */
 import { glyphStr } from './glyphs.js';
 import { LIBRARY, LIB_BY_ID, libraryHas, libraryName, librarySlice, swapSlice, isStretch, MAX_LIBRARY, ownsNoDumbbells } from './library.js';
+import { oemProfile } from './oem-equipment.js';
 import { muscleLoad, gymOf, challengesOf } from './context.js';
 
 export const CONTRACT = 1;
@@ -333,7 +334,7 @@ export function canonicalPlan(S) {
   };
 }
 
-export function cleanPlan(S) {
+export function cleanPlan(S, now) {
   // Names are typed by the person, so they are cut like the profile's text. The icon is held to
   // what the validator lets a plan carry (an icon key or a legacy emoji, core/glyphs.js): it is
   // the client's state, and free text in it would ride into every prompt.
@@ -346,7 +347,7 @@ export function cleanPlan(S) {
   // A weekday holds routine ids, so each entry is bounded like one.
   const week = {};
   [1, 2, 3, 4, 5, 6, 0].forEach(d => { if (S.week?.[d]?.length) week[d] = [].concat(S.week[d]).map(ident); });
-  const programmes = programmesOut(S);
+  const programmes = programmesOut(S, now);
   return { routines, week, ...(programmes.length ? { programmes } : {}) };
 }
 
@@ -623,7 +624,7 @@ export function build(S, opts = {}) {
       today: iso(new Date(now))
     },
     coachProfile: profile && typeof profile === 'object' ? cleanProfile(profile) : null,
-    plan: cleanPlan(S)
+    plan: cleanPlan(S, now)
   };
   // The newer picture (core/context.js): weekly sets and recovery per muscle, the active gym's
   // loading, this month's challenges. Each only when there is something in it; a debrief reads
@@ -639,7 +640,17 @@ export function build(S, opts = {}) {
   // Someone who set up a home gym under Settings → Equipment and left the Coach's own equipment
   // question empty was handed the whole catalogue, leverage machines and all. The profile they
   // are filtering the app with is the better answer than "everything".
-  if (p.coachProfile && !p.coachProfile.equipment.length) {
+  const scene = oemProfile(S);
+  if (scene) {
+    const rules = scene.oemTraining;
+    p.equipmentRules = { equipment: cleanProfile({ equipment: scene.equipment }).equipment,
+      oemTraining: { v: 1, scene: rules.scene === 'gym' ? 'gym' : 'home', quiet: rules.quiet === true,
+        dbCount: rules.dbCount === 'single' ? 'single' : 'pair' } };
+    p.coachProfile ||= cleanProfile({});
+    Object.assign(p.coachProfile, cleanProfile({ ...p.coachProfile, goal: rules.goal, experience: rules.experience,
+      daysPerWeek: rules.days, sessionMin: rules.minutes }));
+  }
+  if (p.coachProfile && (scene || !p.coachProfile.equipment.length)) {
     p.coachProfile.equipment = cleanProfile({ equipment: activeEquipment(S) }).equipment;
   }
   // Owning no dumbbells (the app's switch) wins over an equipment answer that lists them: they go

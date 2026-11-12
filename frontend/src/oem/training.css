@@ -1,0 +1,17 @@
+.oem-setup { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.oem-setup h2, .oem-training-card h2 { font-size: 1.18rem; line-height: 1.5; }
+.oem-setup h3 { font-size: 1rem; line-height: 1.5; }
+.oem-progress { display: flex; gap: 6px; }
+.oem-progress span { height: 4px; flex: 1; background: var(--sep); border-radius: 4px; }
+.oem-progress .on { background: var(--acc); }
+.oem-choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.oem-choice { border: 1px solid var(--sep); border-radius: 14px; padding: 12px 16px; min-height: 48px; font: inherit; color: var(--label); background: var(--surface-2); text-align: start; cursor: pointer; }
+.oem-choice.selected { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 16%, transparent); }
+.oem-choice:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.oem-choice:disabled { opacity: .5; cursor: default; }
+.oem-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.oem-actions > * { flex: 1; }
+.oem-setup summary { padding: 12px 0; cursor: pointer; }
+.oem-exercises { padding-inline-start: 24px; }
+.oem-exercises li { padding: 10px 0; }
+.oem-exercises li strong, .oem-exercises li span { display: block; line-height: 1.6; }

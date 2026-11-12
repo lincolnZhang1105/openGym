@@ -3445,7 +3445,15 @@ export function DayNoteRow({ iso, note }) {
 /* ============================ workout lifecycle ============================ */
 // `routineIds` accepts `string | string[] | null` — `[r.id]` for one routine,
 // `effectiveRoutineIds(...)` for today's planned session, `[]` / null for explicit freestyle.
-export function startFlow(routineIds) {
+export function startFlow(routineIds, { equipmentChecked = false } = {}) {
+  if (S().active) { nav('/workout'); return }
+  const profile = activeProfile(S())
+  const requested = Array.isArray(routineIds) ? routineIds : [routineIds]
+  if (!equipmentChecked && profile?.oemTraining && S().routines.some(r => requested.includes(r.id) && r.ex.some(e => !exAvailable(S(), exOr(e.id))))) {
+    confirmSheet({ title: t('Equipment'), message: t('Some exercises need other equipment. Choose a compatible plan or switch location.'),
+      confirmText: t('Continue'), onConfirm: () => startFlow(routineIds, { equipmentChecked: true }) })
+    return
+  }
   // The weigh-in is a setting (Settings → During a workout, issue #137): off goes straight
   // into the session with no body weight on it, same as "Start without weighing in".
   // Off in Settings → Workout, or with the Body module (Settings → Modules): straight into the session.

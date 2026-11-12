@@ -1,6 +1,7 @@
 import { t } from './i18n-core.js'
 import { EXDB } from './exercises-data.js'
 import { ownsNoDumbbells } from './dumbbells.js'
+import { oemAllows } from '../../../api/coach/core/oem-equipment.js'
 
 // Pieces of kit the catalogue never names as an exercise's equipment — "dumbbell bench press" is
 // tagged `dumbbell`, yet it needs a bench; "chin-up" is tagged `body weight`, yet it needs a bar.
@@ -61,7 +62,7 @@ export function exAvailable(S, ex) {
   const p = activeProfile(S)
   if (!p) return true
   if (ownsNoDumbbells(S) && ex.eq === 'dumbbell') return false
-  return eqAvailable(profileEquipment(p), ex)
+  return p.oemTraining?.v === 1 ? oemAllows(p, ex) : eqAvailable(profileEquipment(p), ex)
 }
 
 // A profile saved before the bench and the bar were on the checklist (#464) never had the chance

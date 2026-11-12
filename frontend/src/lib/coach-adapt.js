@@ -23,6 +23,7 @@ import { dropGrid } from './plates.js'
 import { snapDown } from './warmup-snap.js'
 import { exView, inEntryUnit } from './ex-unit.js'
 import { isAssisted, EXIDX } from './exercises.js'
+import { oemCanAdd } from '../oem/coach-equipment.js'
 import { joinSessionNoProg } from './session-noprog.js'
 
 export const ADAPT_TYPES = ['swap', 'sets', 'reps', 'weight', 'add', 'skip', 'move', 'rest']
@@ -54,6 +55,7 @@ export function markAdaptStale(S, p) {
   const live = adaptFor(S, p)
   return (p?.changes || []).map(c => {
     if (!live || !ADAPT_TYPES.includes(c.type)) return { ...c, stale: true }
+    if (['add', 'swap'].includes(c.type) && !oemCanAdd(S, c.to)) return { ...c, stale: true }
     if (c.type === 'add') return { ...c, stale: !!EXIDX[c.to] ? false : true }
     const at = resolveEntry(S.active, c)
     if (at < 0) return { ...c, stale: true }

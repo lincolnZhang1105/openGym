@@ -6,6 +6,7 @@
  * needs an import attribute, and this file has to load under both without either knowing.
  */
 import { EXERCISES, TIER_STARTS } from './library-data.js';
+import { oemProfile, oemAllows } from './oem-equipment.js';
 
 export const LIBRARY = EXERCISES;
 export const LIB_BY_ID = new Map(LIBRARY.map(e => [e.id, e]));
@@ -166,8 +167,8 @@ export function librarySlice(S, equipment, { keep = [], max = MAX_LIBRARY, focus
   // slightly larger payload.
   const noDumbbells = ownsNoDumbbells(S);
   const filtered = (wanted.length ? LIBRARY.filter(e => equipmentAllows(wanted, e.id)) : LIBRARY)
-    .filter(e => !noDumbbells || !isDumbbellLift(e.id));
-  const equipped = filtered.length ? filtered : LIBRARY;
+    .filter(e => (!noDumbbells || !isDumbbellLift(e.id)) && oemAllows(oemProfile(S), e));
+  const equipped = filtered.length || oemProfile(S) ? filtered : LIBRARY;
   // Same reasoning as the equipment fallback: a filter that removed everything is not a filter
   // worth honouring. Someone whose only kit reaches nothing but stretches gets the stretches.
   const lifts = equipped.filter(e => !isStretch(e));
@@ -223,7 +224,7 @@ export function swapSlice(S, equipment, exId, { keep = [], max = 36 } = {}) {
   const focus = LIB_BY_ID.get(exId);
   const wanted = (equipment || []).map(x => String(x).toLowerCase());
   const noDumbbells = ownsNoDumbbells(S);
-  const fits = e => equipmentAllows(wanted, e.id) && !(noDumbbells && isDumbbellLift(e.id)) && !isStretch(e) && e.id !== exId;
+  const fits = e => equipmentAllows(wanted, e.id) && oemAllows(oemProfile(S), e) && !(noDumbbells && isDumbbellLift(e.id)) && !isStretch(e) && e.id !== exId;
   const out = [];
   const taken = new Set();
   const add = e => { if (e && !taken.has(e.id) && out.length < max) { taken.add(e.id); out.push(e); } };
