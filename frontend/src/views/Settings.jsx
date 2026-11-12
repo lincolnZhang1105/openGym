@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, forwardRef, useSyncExternalStore } from 'react'
 import { useNavigate, useParams, useLocation, Navigate } from 'react-router-dom'
 import { useStore, DEF, hasData } from '../store/useStore.js'
+import { englishNamesByDefault } from '../oem/locale.js'
 import { healthStatus, loadHealth, enableHealth, disableHealth, openHealthConnect, onHealthChange, enableRead, disableRead } from '../lib/health-sync.js'
 import { phoneSessionSupported } from '../lib/phone-workout.js'
 import { workoutControls } from '../lib/workout-controls.js'
@@ -860,7 +861,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
         {ctx.nameLang && <>
           <Row icon="globe" iconTint="var(--purple)" title={t('English exercise names')}
             subtitle={t('Show the English name in parentheses next to the translated one.')}>
-            <Switch checked={S.enParens?.[baseLang(lang)] ?? true}
+            <Switch checked={S.enParens?.[baseLang(lang)] ?? englishNamesByDefault(lang)}
               disabled={S.enOnly?.[baseLang(lang)] === true}
               onChange={v => update(s => { s.enParens = { ...(s.enParens || {}), [baseLang(lang)]: v } })} />
           </Row>

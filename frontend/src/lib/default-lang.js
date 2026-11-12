@@ -7,14 +7,13 @@
 // they are — including every existing profile whose `lang` is the old default.
 //
 // For a marked copy, the instance's DEFAULT_LANG (GET /api/config `default_lang`) comes first,
-// then the first of the browser's languages this app speaks, then English.
+// then the OEM's Simplified Chinese default, independent of the device language.
 //
 // That answer is worked out where the language is used (effectiveLang) and never written back
-// into the state. It depends on the device — two phones of one profile can have browsers in two
-// languages — and the state is synced: a derived language stored in it would be pushed by one
-// device, pulled by the other, re-derived there and pushed back, round after round. `lang` is
-// only written when someone picks one in Settings, which also clears the mark.
+// into the state. Cached server defaults may differ across devices; keeping the derived answer
+// out of sync avoids unnecessary state writes. Picking a language in Settings clears the mark.
 import { LANGS } from './i18n-core.js'
+import { DEFAULT_LANG } from '../oem/locale.js'
 
 const KEYS = Object.keys(LANGS)
 
@@ -36,12 +35,11 @@ export function matchLocale(tag) {
 export function autoLang(S, config, navLangs = []) {
   if (!S || S.langAuto !== true) return null
   return matchLocale(config?.default_lang)
-    || (navLangs || []).map(matchLocale).find(Boolean)
-    || 'en'
+    || DEFAULT_LANG
 }
 
-// The instance's DEFAULT_LANG as last seen on this device, so a boot does not show the browser's
-// language (or the copy's stored one) until /api/config answers and then switch. '' means the
+// The instance's DEFAULT_LANG as last seen on this device, so a boot does not show the OEM's
+// default until /api/config answers and then switch. '' means the
 // instance has none; null means this device has not asked yet.
 const CACHE_KEY = 'gym_default_lang'
 export function rememberDefaultLang(config) {
@@ -54,15 +52,15 @@ function cachedDefaultLang() {
 /**
  * The language to show this copy in, on this device: its own `lang`, or for a copy that never
  * picked one, what autoLang says. Before the config is in, the default this device last saw
- * stands in for it; with none seen yet the copy's stored language is used unchanged.
+ * stands in for it; with none seen yet the OEM default is used.
  */
 export function effectiveLang(S, config, navLangs = browserLangs()) {
-  const own = (S && typeof S.lang === 'string' && S.lang) || 'en'
+  const own = matchLocale(S?.lang) || DEFAULT_LANG
   if (!S || S.langAuto !== true) return own
   let cfg = config
   if (!cfg) {
     const seen = cachedDefaultLang()
-    if (seen === null) return own
+    if (seen === null) return DEFAULT_LANG
     cfg = { default_lang: seen }
   }
   return autoLang(S, cfg, navLangs) || own

@@ -12,6 +12,9 @@ import './coach.css'
 import './index.css'
 import { hideBoot, handOverFromLaunchScreen } from './lib/boot.js'
 import { guardFocusZoom } from './lib/viewport-zoom.js'
+import { setLang, baseLang } from './lib/i18n.js'
+import { effectiveLang } from './lib/default-lang.js'
+import { englishNamesByDefault } from './oem/locale.js'
 
 // App.jsx restores per-route scroll itself; the browser's own attempt races it.
 // A script that dies before the app draws would otherwise leave the boot logo lifting forever.
@@ -23,9 +26,14 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
 // The web build lets people pinch to zoom; on iOS a focused small field must not zoom the page.
 if (!MOBILE) guardFocusZoom()
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode><App /></StrictMode>
-)
+// Load the selected words and exercise names before the first screen mounts, so initial
+// state/memoised labels are not captured in English while the Chinese packs are loading.
+const { S, config } = useStore.getState()
+const lang = effectiveLang(S, config)
+setLang(lang, S.enParens?.[baseLang(lang)] ?? englishNamesByDefault(lang), S.enOnly?.[baseLang(lang)] === true)
+  .then(() => createRoot(document.getElementById('root')).render(
+    <StrictMode><App /></StrictMode>
+  ))
 
 // The photos and videos of custom exercises, in every build (the phone and the demo included):
 // uploads of what the server lacks, the local clean-up, and the plan's files kept offline.

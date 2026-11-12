@@ -4,9 +4,10 @@
 // loads, the React subscription hook) live in i18n.js and re-export from here.
 
 export const LANGS = {
+  zh: '简体中文', 'zh-TW': '繁體中文',
   en: 'English', de: 'Deutsch', 'de-CH': 'Deutsch (Schweiz)', es: 'Español', fr: 'Français',
   it: 'Italiano', pt: 'Português (Portugal)', 'pt-BR': 'Português (Brasil)', pl: 'Polski',
-  tr: 'Türkçe', ru: 'Русский', uk: 'Українська', zh: '简体中文', 'zh-TW': '繁體中文',
+  tr: 'Türkçe', ru: 'Русский', uk: 'Українська',
   ko: '한국어', hi: 'हिन्दी', bn: 'বাংলা', th: 'ไทย', hu: 'Magyar', sv: 'Svenska', ar: 'العربية'
 }
 // Languages with exercise instructions / names, generated from catalogue/i18n by
@@ -186,7 +187,8 @@ export const descFor = ex => {
   if (!ex) return ''
   const own = descs && descs[ex.id]
   if (own) return own
-  if (!enDescs) askDetails()
+  // Retry a failed localised description pack too, even when English loaded successfully.
+  askDetails()
   return (enDescs && enDescs[ex.id]) || ex.desc || ''
 }
 

@@ -35,10 +35,11 @@ describe('autoLang', () => {
     expect(autoLang({ lang: 'en' }, { default_lang: 'pt-BR' }, ['de-DE'])).toBe(null)
     expect(autoLang({ lang: 'en', langAuto: false }, { default_lang: 'pt-BR' }, ['de-DE'])).toBe(null)
   })
-  it('puts DEFAULT_LANG before the browser, the browser before English', () => {
+  it('uses Chinese regardless of browser language unless a server default is configured', () => {
     expect(autoLang(fresh, { default_lang: 'pt-BR' }, ['de-DE'])).toBe('pt-BR')
-    expect(autoLang(fresh, {}, ['nl-NL', 'de-DE'])).toBe('de')
-    expect(autoLang(fresh, {}, ['nl-NL'])).toBe('en')
-    expect(autoLang(fresh, { default_lang: 'xx' }, ['fr-FR'])).toBe('fr')
+    expect(autoLang(fresh, {}, ['en-US'])).toBe('zh')
+    expect(autoLang(fresh, {}, ['nl-NL', 'de-DE'])).toBe('zh')
+    expect(autoLang(fresh, {}, ['nl-NL'])).toBe('zh')
+    expect(autoLang(fresh, { default_lang: 'xx' }, ['fr-FR'])).toBe('zh')
   })
 })

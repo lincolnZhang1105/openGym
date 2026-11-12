@@ -20,9 +20,25 @@ beforeEach(async () => {
   vi.doMock('../exercise-desc/en.js', async () => (net.up ? { default: { 9999: 'A lift.' } } : offline()))
   i18n = await import('./i18n.js')
 })
-afterEach(() => { vi.useRealTimers() })
+afterEach(() => { vi.useRealTimers(); vi.doUnmock('../exercise-desc/zh.js') })
 
 describe('a failed load of the English steps', () => {
+  it('retries Chinese descriptions even when the English fallback already loaded', async () => {
+    let chineseOnline = false
+    vi.doMock('../exercise-desc/zh.js', async () => {
+      if (!chineseOnline) throw new TypeError('offline')
+      return { default: { 9999: '中文动作简介。' } }
+    })
+    net.up = true
+    await i18n.setLang('zh')
+    i18n.descFor(ex)
+    await settle()
+    expect(i18n.descFor(ex)).toBe('A lift.')
+    chineseOnline = true
+    window.dispatchEvent(new Event('online'))
+    await settle()
+    expect(i18n.descFor(ex)).toBe('中文动作简介。')
+  })
   it('is not mistaken for no steps: tried again on the next ask after a pause', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     expect(i18n.instrFor(ex)).toEqual([])

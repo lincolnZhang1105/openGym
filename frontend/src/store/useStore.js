@@ -25,7 +25,7 @@ import { loadRemote, chooseLocal, forgetRemote, connect, normalizeServerUrl, ren
 import { loadCfAccess } from '../lib/cf-access.js'
 import { loadCoachDevice, saveCoachDevice, coachDeviceSettings } from '../lib/coach-device.js'
 import { initCoachSchedule } from '../lib/coach-schedule.js'
-import { RTL_LANGS } from '../lib/i18n-core.js'
+import { DEFAULT_LANG } from '../oem/locale.js'
 import { DEFAULT_TEMPLATE_ID } from '../lib/structuralBalanceTemplates.js'
 
 import { WC_DEFAULT } from '../lib/workout-controls.js'
@@ -89,7 +89,7 @@ const gainedWorkoutMedia = (prev, next) => {
   return workoutMediaHashes(next).some(h => !had.has(h))
 }
 export const DEF = {
-  unit: 'kg', restSec: 90, restPauseSec: 15, sound: true, soundOnSilent: false, vibrateOnSilent: false, timerFlash: false, timedSetOvertime: false, keepAwake: true, lang: 'en',
+  unit: 'kg', restSec: 90, restPauseSec: 15, sound: true, soundOnSilent: false, vibrateOnSilent: false, timerFlash: false, timedSetOvertime: false, keepAwake: true, lang: DEFAULT_LANG,
   theme: 'dark', accent: 'lime', body: 'male', targetW: null,
   // The weekly-rate corridor on the body-weight card (#759, lib/bodyweight.js rateCorridor).
   rateGoal: null,
@@ -260,7 +260,7 @@ export const DEF = {
   progDefault: 'linear',
   // Per-language choice for translated exercise names: whether the original English name is
   // shown in parentheses next to the translation. Map { '<lang>': boolean }; a missing key
-  // (any profile written before this setting existed) reads as shown.
+  // uses the OEM display default: hidden for Chinese, shown for other languages.
   enParens: {},
   // Per-language choice for translated exercise names: whether the translation is replaced
   // entirely by the original English name. Independent of enParens and keyed by the same base
@@ -311,20 +311,11 @@ export function draftOf(prev) {
   }
 }
 
-// First run on a device whose language renders right-to-left starts in that language
-// rather than English; the boot script in index.html mirrors this check for the
-// pre-paint direction. The choice is persisted like any other setting once the user
-// picks a language.
-const detectedLang = () => {
-  try {
-    const base = (navigator.language || '').toLowerCase().split('-')[0]
-    if (RTL_LANGS.has(base)) return base
-  } catch (e) { /* ignore */ }
-  return 'en'
-}
+// New OEM profiles start in Chinese even on an English-language device.
+const detectedLang = () => DEFAULT_LANG
 
 // A copy started from nothing on this device. `langAuto` marks its language as one nobody has
-// picked yet, so the instance's DEFAULT_LANG or the browser's language may set it
+// picked yet, so the instance's DEFAULT_LANG or the OEM default may set it
 // (lib/default-lang.js, #303); picking one in Settings clears it. DEF does not carry the mark:
 // merged under a saved copy it would claim that every existing profile never chose.
 export function freshState() {
